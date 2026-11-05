@@ -1,0 +1,3 @@
+-r requirements.txt
+# For a CUDA GPU, install a matching PyTorch wheel following https://pytorch.org/get-started/locally/
+torch>=2.2

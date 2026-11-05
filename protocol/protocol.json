@@ -1,0 +1,17 @@
+{
+  "seed": 2026,
+  "image_size": 128,
+  "split": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "actual_counts": {
+    "train": 4479,
+    "val": 960,
+    "test": 961
+  },
+  "classical_val_count": 20,
+  "classical_test_count": 30,
+  "note": "Image-level split; patient IDs are unavailable."
+}
