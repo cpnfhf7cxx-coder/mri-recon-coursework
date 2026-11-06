@@ -127,17 +127,39 @@ python demo.py --method unet --checkpoint checkpoints/unet.pt --split test --dev
 `demo.py` 会检查 checkpoint 中记录的加速率、mask 种子和图像尺寸是否与测试命令一致。只加载自己训练或来源可信的 checkpoint；旧版 PyTorch 的兼容加载无法提供新版 `weights_only` 的完整安全保护。
 
 
-## 6. 必交的可视化与数值结果
+## 6. 报告与必交结果
 
-每位同学**至少提交 3 个不同 MRI 输入样本**的三联图，每个样本均从左到右包含：
+报告必须使用 [`docs/report-template.md`](docs/report-template.md) 的结构，并完整包含以下 **5 个部分，缺一不可**：
+
+1. 实验目标与基本原理；
+2. 数据与实验设置；
+3. 方法介绍；
+4. 定量结果；
+5. 必交可视化。
+
+### 6.1 必交可视化
+
+报告中必须放入**至少 3 个不同 MRI 测试样本**的三联图。每张三联图从左到右必须包含：
 
 | ① 退化前 (Original GT) | ② 退化后 (Zero-filled) | ③ 恢复后 (Reconstruction) |
 | --- | --- | --- |
 | 完整 MRI 灰度图像 | 欠采样引起的混叠图像 | 你的算法输出 |
 
-**要求**：同一张图像、相同空间位置和固定 `[0,1]` 灰度显示范围，不得对每一栏单独做自动对比度拉伸；第二、三栏标上相对原图的 PSNR 与 SSIM；最好选择效果较好、一般、较差各一张并进行简要分析。
+每张三联图还必须满足：
 
-脚本自动生成：
+- 三栏对应同一个测试样本，尺寸和空间位置完全一致；
+- 三栏统一使用 `[0,1]` 灰度显示范围，不能分别做自动对比度拉伸；
+- Zero-filled 和 Reconstruction 两栏均标出相对 Original GT 的 PSNR 与 SSIM；
+- 传统路线的 Reconstruction 应展示自己实现的第二种算法；TV-POCS 结果可另外补充；
+- 建议覆盖效果较好、一般和较差的样本。
+
+运行本仓库根目录下的 **`demo.py`** 会自动生成这些文件。例如：
+
+```bash
+python demo.py --method student --split test --file-list protocol/classical_test.txt --out outputs/my_method
+```
+
+上述命令的 `--out outputs/my_method` 对应下面的输出目录：
 
 ```text
 outputs/my_method/
@@ -148,21 +170,25 @@ outputs/my_method/
 └── mask.npy           # 实际使用的 k-space mask
 ```
 
-深度学习训练还会在 checkpoint 旁生成 `unet-history.csv`，包含每轮的 train/validation L1，可直接用于绘制训练曲线和说明最佳 epoch。
+其中，最终提交的 `metrics.csv` 必须来自规定的最终测试集合：传统路线使用 `protocol/classical_test.txt` 中固定的 30 张 test 图片；深度学习路线使用完整 test 集。不能提交 validation 调参阶段的 `metrics.csv` 代替最终测试结果。
 
-报告的最基本数值对比表：
+### 6.2 报告第四部分“定量结果”的额外要求
 
-| Method | PSNR (dB) ↑ | SSIM ↑ | MAE ↓ |
-| --- | ---: | ---: | ---: |
-| Zero-filled | （填写） | （填写） | （填写） |
-| TV-POCS（传统路线必填） | （填写） | （填写） | （填写） |
-| Your method | （填写） | （填写） | （填写） |
+所有同学都必须先填写报告模板中的最终指标表，报告 Zero-filled 与最终方法的平均 PSNR、SSIM 和 MAE。此外还必须按所选路线补充：
 
-一切数据都必须来自**相同图像集合、同样的采样 mask 与数据范围**。建议报告额外展示 mask 或迭代收敛曲线。
+- **传统路线**：增加一张 validation 调参对比表。至少比较同一方法的 2 组参数设置，使用固定 20 张 `classical_val.txt` 图片，并列出参数、PSNR、SSIM、MAE；说明根据什么标准选出最终参数。最终选定参数只能在固定 30 张 test 图片上运行一次。
+- **深度学习路线**：展示一张训练/验证损失曲线，横轴为 epoch，纵轴为 loss，同时画出 train loss 与 validation loss，并标出最佳 epoch 或 early-stopping 位置。`train_unet.py` 会在 checkpoint 旁生成 `unet-history.csv`，可用它绘图。
 
-## 7. 提交方式与评分（建议）
 
-**提交文件**：`组号_学号_姓名.zip`，至少包含报告 PDF、运行代码、重建示例图、`metrics.csv` 与运行说明。深度学习路线需交模型权重或可获取的权重链接（如果太大），传统路线需交关键参数与迭代方式。**不要把原始数据集打包提交**。
+## 7. 提交方式与评分
+
+提交文件命名为 `组号_学号_姓名.zip`。压缩包中以下三类文件**必须全部包含**：
+
+1. **报告 PDF**：完整包含报告模板规定的五个部分，三联图直接放入报告；
+2. **代码文件**：包含实际运行的源代码和必要的运行说明，助教应能据此复现实验；
+3. **最终 `metrics.csv`**：由 `demo.py` 在规定 test 集上生成，不得手工修改。
+
+深度学习路线还应提交模型权重；若权重过大，可提供可访问的下载链接。传统路线必须在报告和代码中保留最终参数及迭代设置。**不要把原始数据集、`data/processed/` 或全部重建图片打包提交。**
 
 | 项目 | 分值 | 说明 |
 | --- | ---: | --- |
@@ -173,7 +199,7 @@ outputs/my_method/
 
 额外尝试 2×/8× 加速、不同 mask、数据一致性层、收敛曲线等可作为自主探索，**不作为必需项**
 
-**报告模板**：[`docs/report-template.md`](docs/report-template.md)
+**报告模板（五部分均为必填）**：[`docs/report-template.md`](docs/report-template.md)
 
 ## 8. 仓库结构
 
