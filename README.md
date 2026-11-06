@@ -9,13 +9,13 @@
 
 ## 1. 作业背景
 
-MRI 扫描采集的是频域 **k-space** 信息，欠采样可以减少采集量，但直接逆傅里叶变换通常会出现混叠伪影。给定完整的 2D 图像 \(x\)，本次作业通过二维傅里叶变换和固定采样掩码 **模拟** 欠采样：
+MRI 扫描采集的是频域 **k-space** 信息，欠采样可以减少采集量，但直接逆傅里叶变换通常会出现混叠伪影。给定完整的 2D 图像 $x$，本次作业通过二维傅里叶变换和固定采样掩码 **模拟** 欠采样：
 
-$$
+```math
 y = M \odot \mathcal{F}(x), \quad x_{ZF}=\left|\mathcal{F}^{-1}(y)\right|,\quad \hat x = f(y,M,x_{ZF}).
-$$
+```
 
-其中 \(M\) 是预定义的 Cartesian k-space 采样掩码，\(x_{ZF}\) 是 Zero-filled baseline，\(\hat x\) 是你的重建结果。
+其中 $M$ 是预定义的 Cartesian k-space 采样掩码，$x_{ZF}$ 是 Zero-filled baseline，$\hat{x}$ 是你的重建结果。
 
 **重要说明**：输入数据是预处理后的**幅值 MRI 图片**（JPEG/PNG），不包含扫描仪原始多线圈 k-space、相位信息和采集参数。本作业是**回顾性模拟欠采样**，只能用于重建算法教学，不应被描述为真实 MRI 采集加速性能，也不能用于临床结论。此处的“退化后”是指 *Zero-filled Reconstruction*，不是 k-space 图片。
 
@@ -122,7 +122,7 @@ python train_unet.py --epochs 30 --patience 5 --batch-size 16 --device auto
 python demo.py --method unet --checkpoint checkpoints/unet.pt --split test --device auto --out outputs/unet-test
 ```
 
-这里的 `--epochs 30` 是训练上限，不是固定训练 30 轮。脚本每个 epoch 计算 validation L1，保存 validation 最优 checkpoint；连续 5 轮没有显著改善时提前停止，并生成 `checkpoints/unet-history.csv`。深度学习路线只用 `train` 训练、用 `val` 选 epoch 与超参数，最后在完整 `test` 上运行一次并报告结果；不得用 test 继续训练或选模型。
+这里的 `--epochs 30` 是训练上限，不是固定训练 30 轮。请根据自己的训练过程指定合适的该参数。脚本每个 epoch 计算 validation L1，保存 validation 最优 checkpoint；连续 5 轮没有显著改善时提前停止，并生成 `checkpoints/unet-history.csv`。深度学习路线只用 `train` 训练、用 `val` 选 epoch 与超参数，最后在完整 `test` 上运行一次并报告结果；不得用 test 继续训练或选模型。
 
 `demo.py` 会检查 checkpoint 中记录的加速率、mask 种子和图像尺寸是否与测试命令一致。只加载自己训练或来源可信的 checkpoint；旧版 PyTorch 的兼容加载无法提供新版 `weights_only` 的完整安全保护。
 
